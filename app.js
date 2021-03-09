@@ -6,7 +6,7 @@ const WebSocket = require('ws');
 // 2.转发SDP和iceCandidate    包括处理客户端请求，主动推送消息给客户端
 
 // 建立服务器
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ port: 9527 });
 
 // 通过map保存控制码和端的映射关系
 const code2ws = new Map();
@@ -28,7 +28,6 @@ wss.on('connection', function connection(ws,req) {
     }
     // An event listener to be called when a message is received from the server.
     ws.on('message', function incoming(message) {
-        console.log('received: %s', message);
         // 约定message格式为{event,data}
         let parsedMessage = {};
         // 调用JSON.parse方法时需要try...catch，因为传来的可能不是标准的JSON对象
@@ -37,12 +36,11 @@ wss.on('connection', function connection(ws,req) {
         } catch (error) {
             // 错误处理
             ws.sendError('message invalid');
-            console.log('error', error);
             return;
         }
         let { event, data } = parsedMessage;
         if (event === 'login') {
-            ws.sendData('login', { code });
+            ws.sendData('logined', { code });
         } else if (event === 'control') {
             let remoteCode = +data.remoteCode;
             if (code2ws.has(remoteCode)) {
@@ -73,6 +71,5 @@ wss.on('connection', function connection(ws,req) {
     // 封装定时器，避免长时间连接
     ws._closeTimeout = setTimeout(() => {
         ws.terminate();
-    },10 * 1000);
-    ws.send('hello');
+    },60 * 10 * 1000);
 });
